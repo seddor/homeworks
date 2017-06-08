@@ -1,20 +1,30 @@
-const CitySelector = require('./CitySelector');
-const $ = require('jquery');
+const
+    CitySelector = require('./CitySelector'),
+    $ = require('jquery'),
+    $info = $('#info');
 
 $('#createCitySelector').on('click', function () {
-    const citySelector = new CitySelector({
-        elementId: 'citySelector',
-        regionsUrl: 'http://localhost:3000/regions',
-        localitiesUrl: 'http://localhost:3000/localities',
-        saveUrl: 'http://localhost:3000/selectedRegions',
-        infoRegionId: 'regionText',
-        infoLocationId: 'localityText'
-    });
+    if (!$('#citySelector').children().length) {
+        const citySelector = new CitySelector({
+            elementId: 'citySelector',
+            regionsUrl: 'http://localhost:3000/regions',
+            localitiesUrl: 'http://localhost:3000/localities',
+            saveUrl: 'http://localhost:3000/selectedRegions',
+            infoRegionId: 'regionText',
+            infoLocationId: 'localityText'
+        });
 
-    $('#info').show();
+        $info.show();
+    }
 });
 
-// $('#destroyCitySelector').on('click', function () {
-//     $(citySelector).detach();
-// });
+$('#destroyCitySelector').on('click', function () {
+    $(citySelector).empty();
+
+    $info
+        .hide()
+        .find($('span')).text('')
+        .end()
+        .find($('input')).val('');
+});
 

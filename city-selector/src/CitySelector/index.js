@@ -4,6 +4,7 @@ const $ = require('jquery');
 
 class CitySelector {
     constructor(params) {
+        console.log('123');
         this.$element     = $(`#${params.elementId}`);
         this.regionsUrl    = params.regionsUrl;
         this.localitiesUrl = params.localitiesUrl;
