@@ -33,9 +33,9 @@ class CitySelector {
         this.sendAjaxRequest(this.regionsUrl).then(response => {
             this.$element
                 .html(
-                    '<div class="regions">' +
+                    '<div class="container-list regions">' +
                         response.reduce((result, current) => {
-                            return result + `<p class="regions__item ${this.regionItemClass}" data-id=${current.id}>${current.title}</p>`;
+                            return result + `<p class="container-list__item regions__item ${this.regionItemClass}" data-id=${current.id}>${current.title}</p>`;
                         }, '') +
                     '<div/>'
                 );
@@ -43,16 +43,20 @@ class CitySelector {
     }
 
     selectRegion(event) {
-        const regionId = $(event.currentTarget).data('id');
+        const
+            $currentTarget = $(event.currentTarget),
+            regionId = $currentTarget.data('id');
+        $(`.${this.regionItemClass}`).removeClass('_active');
+        $currentTarget.addClass('_active');
         this.$infoRegion.html(regionId);
         this.fetchLocations(regionId);
     }
 
     fetchLocations(id) {
         let appendLocations = function (locations, locationItemClass) {
-            return '<div class="locations">' +
+            return '<div class="container-list locations">' +
                 locations.reduce((result, current) => {
-                    return result + `<p class="locations__item ${locationItemClass}" data-name=${current}>${current}</p>`;
+                    return result + `<p class="container-list__item locations__item ${locationItemClass}" data-name=${current}>${current}</p>`;
                 }, '') +
                 '<div/>';
         };
@@ -71,10 +75,17 @@ class CitySelector {
     }
 
     selectLocation(event) {
-        const locationName = $(event.currentTarget).data('name');
+        const
+            $currentTarget = $(event.currentTarget),
+            locationName = $currentTarget.data('name');
         this.$infoLocation.html(locationName);
-        if (!this.$element.children(`#${this.submitBtnId}`).length) {
-            this.$element.append(`<button id="${this.submitBtnId}">Save</button>`);
+        $(`.${this.locationItemClass}`).removeClass('_active');
+        $currentTarget.addClass('_active');
+        if (!this.$element.find(`#${this.submitBtnId}`).length) {
+            this.$element.append(
+                `<div class="container-list">
+                    <button class="btn" id="${this.submitBtnId}">Save</button>
+                </div>`);
         }
     }
 
