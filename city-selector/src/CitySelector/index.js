@@ -4,13 +4,14 @@ const $ = require('jquery');
 
 class CitySelector {
     constructor(params) {
-        console.log('123');
         this.$element     = $(`#${params.elementId}`);
         this.regionsUrl    = params.regionsUrl;
         this.localitiesUrl = params.localitiesUrl;
         this.saveUrl       = params.saveUrl;
         this.$infoRegion   = $(`#${params.infoRegionId}`);
         this.$infoLocation = $(`#${params.infoLocationId}`);
+
+        this.$emptyContainer = this.$element.clone();
 
         this.regionBtnId = 'region-btn';
         this.regionItemClass = 'region-select-js';
@@ -115,6 +116,12 @@ class CitySelector {
             alert('Error on Ajax request');
             console.log('Error' . errorThrown);
         });
+    }
+
+    destroy() {
+        this.$element.replaceWith(this.$emptyContainer);
+
+        $(document).triggerHandler('citySelector:destroy');
     }
 }
 
