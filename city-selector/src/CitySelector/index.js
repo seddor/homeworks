@@ -1,6 +1,9 @@
+'use strict';
 require('./style.less');
 // Your code...
-const $ = require('jquery');
+const
+    $      = require('jquery'),
+    render = require('./render/render');
 
 class CitySelector {
     constructor(params) {
@@ -8,38 +11,46 @@ class CitySelector {
         this.regionsUrl    = params.regionsUrl;
         this.localitiesUrl = params.localitiesUrl;
         this.saveUrl       = params.saveUrl;
-        this.$infoRegion   = $(`#${params.infoRegionId}`);
-        this.$infoLocation = $(`#${params.infoLocationId}`);
 
         this.$emptyContainer = this.$element.clone();
 
-        this.regionBtnId       = 'region-btn';
-        this.regionItemClass   = 'js-region-select';
-        this.locationItemClass = 'js-location-select';
-        this.submitBtnId       = 'save-btn';
+        this.regionBtnId            = 'region-btn';
+        this.regionContainerClass   = 'regions';
+        this.regionItemClass        = 'js-region-select';
+        this.locationContainerClass = 'locations';
+        this.locationItemClass      = 'js-location-select';
+        this.submitBtnId            = 'save-btn';
+        this.regionField            = 'regionInput';
+        this.locationField          = 'locationInput';
 
         this.initElements();
     }
 
     initElements() {
         this.$element
-            .html(`<button id="${this.regionBtnId}">Select region</button>`)
+            .wrap(render.renderForm('citySelectorForm', this.saveUrl))
+            .append(render.renderHiddenInput(this.regionField, 'region'))
+            .append(render.renderHiddenInput(this.locationField, 'locality'))
+            .append(render.renderButton(this.regionBtnId, 'Select region'))
             .on('click', `#${this.regionBtnId}`, this.fetchRegions.bind(this))
             .on('click', `.${this.regionItemClass}`, this.selectRegion.bind(this))
             .on('click', `.${this.locationItemClass}`, this.selectLocation.bind(this))
-            .on('click', `#${this.submitBtnId}`, this.submitSelectedData.bind(this))
         ;
     }
 
     fetchRegions() {
         this.sendAjaxRequest(this.regionsUrl).then(response => {
-            this.$element
-                .html(
-                    '<div class="container-list regions">' +
-                        response.reduce((result, current) => {
-                            return result + `<p class="container-list__item regions__item ${this.regionItemClass}" data-id=${current.id}>${current.title}</p>`;
-                        }, '') +
-                    '<div/>'
+            $(`#${this.regionBtnId}`)
+                .replaceWith(render.renderList(
+                    response.map((item) => {
+                        return new Object({
+                            data: item.id,
+                            text: item.title
+                        });
+                    }),
+                    this.regionContainerClass,
+                    this.regionItemClass,
+                    'id')
                 );
         });
     }
@@ -48,8 +59,12 @@ class CitySelector {
         const
             $currentTarget = $(event.currentTarget),
             regionId = $currentTarget.data('id');
+
         $(`.${this.regionItemClass}`).removeClass('_active');
         $currentTarget.addClass('_active');
+
+        $(`#${this.locationField}`).val('');
+        $(`#${this.regionField}`).val(regionId);
         $(document).trigger({
             'type': 'region_changed',
             'region_id': regionId
@@ -58,22 +73,33 @@ class CitySelector {
     }
 
     fetchLocations(id) {
-        let appendLocations = function (locations, locationItemClass) {
-            return '<div class="container-list locations">' +
-                locations.reduce((result, current) => {
-                    return result + `<p class="container-list__item locations__item ${locationItemClass}" data-name=${current}>${current}</p>`;
-                }, '') +
-                '<div/>';
+        const prepareItems = (items) => {
+            return items.map((item) => {
+                return new Object({
+                    data: item,
+                    text: item
+                });
+            });
         };
         this.sendAjaxRequest(this.localitiesUrl, 'GET', {id: id}).then(response => {
-            if (this.$element.children('.locations:first').length) {
-                this.$element.children('.locations:first').html(
-                    appendLocations(response.shift().list, this.locationItemClass)
+            if (this.$element.children(`.${this.locationContainerClass}:first`).length) {
+                this.$element.children(`.${this.locationContainerClass}:first`).html(
+                    render.renderList(
+                        prepareItems(response.shift().list),
+                        this.locationContainerClass,
+                        this.locationItemClass,
+                        'name'
+                    )
                 );
             } else {
                 this.$element
                     .append(
-                        appendLocations(response.shift().list, this.locationItemClass)
+                        render.renderList(
+                            prepareItems(response.shift().list),
+                            'locations',
+                            this.locationItemClass,
+                            'name'
+                        )
                     );
             }
         });
@@ -83,28 +109,18 @@ class CitySelector {
         const
             $currentTarget = $(event.currentTarget),
             locationName = $currentTarget.data('name');
+        $(`#${this.locationField}`).val(locationName);
         $(document).trigger({
             'type': 'location_changed',
-            'location_name': locationName
+            'locationName': locationName
         });
         $(`.${this.locationItemClass}`).removeClass('_active');
         $currentTarget.addClass('_active');
         if (!this.$element.find(`#${this.submitBtnId}`).length) {
             this.$element.append(
-                `<div class="container-list">
-                    <button class="btn" id="${this.submitBtnId}">Save</button>
-                </div>`);
+                render.renderButton(this.submitBtnId, 'Save', 'submit-btn', 'submit')
+            );
         }
-    }
-
-    submitSelectedData() {
-        const data = {
-            'region': this.$infoRegion.html(),
-            'locality': this.$infoLocation.html()
-        };
-        this.sendAjaxRequest(this.saveUrl, 'POST', data).then(response => {
-            alert(JSON.stringify(response));
-        });
     }
 
     sendAjaxRequest(url, type = 'GET', params = {}) {

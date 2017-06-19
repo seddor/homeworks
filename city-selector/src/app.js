@@ -1,3 +1,4 @@
+'use strict';
 const
     CitySelector = require('./CitySelector'),
     $ = require('jquery'),
@@ -36,19 +37,18 @@ $(document).on('region_changed', function (ev) {
         $info
             .find('#regionText').html(ev.region_id)
             .end()
-            .find('#localityText').html(ev.location_name).empty();
+            .find('#localityText').empty();
     }
 });
 
 $(document).on('location_changed', function (ev) {
-    if (ev.location_name) {
-        $info.find('#localityText').html(ev.location_name);
+    if (ev.locationName) {
+        $info.find('#localityText').html(ev.locationName);
     }
 });
 
 $.fn.loading = function(state) {
     state = state || 'show';
-
     if (state === 'show') {
         $('body').append('<div class="js-ajax-loading" id="ajaxloading"><div></div></div>');
     } else {
